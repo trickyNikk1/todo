@@ -14,7 +14,7 @@ export default class Task extends Component {
   };
 
   render() {
-    const { description, created, num, onScratched } = this.props;
+    const { description, created, num, onScratched, onDeleted } = this.props;
     let id = "checkbox-" + num;
     // const { done } = this.state;
     return (
@@ -30,7 +30,7 @@ export default class Task extends Component {
           <span className="created">{created}</span>
         </label>
         <button className="icon icon-edit" />
-        <button className="icon icon-destroy" />
+        <button className="icon icon-destroy" onClick={onDeleted} />
       </div>
     );
   }

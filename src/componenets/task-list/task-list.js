@@ -4,7 +4,7 @@ import "./task-list.css";
 
 export default class TaskList extends Component {
   render() {
-    const { todos, onScratched } = this.props;
+    const { todos, onScratched, onDeleted } = this.props;
     const elements = todos.map(({ status, num, ...itemProps }) => {
       const props = {
         ...itemProps,
@@ -12,7 +12,11 @@ export default class TaskList extends Component {
       };
       return (
         <li className={status} key={num}>
-          <Task onScratched={() => onScratched(num)} {...props} />
+          <Task
+            onDeleted={() => onDeleted(num)}
+            onScratched={() => onScratched(num)}
+            {...props}
+          />
         </li>
       );
     });

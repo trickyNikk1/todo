@@ -41,6 +41,15 @@ export default class TodoApp extends Component {
       };
     });
   };
+  deleteTask = (targetNum) => {
+    this.setState((prevState) => {
+      return {
+        todoData: prevState.todoData.filter((todoItem) => {
+          return todoItem.num !== targetNum;
+        }),
+      };
+    });
+  };
   render() {
     return (
       <section className="todoapp">
@@ -49,6 +58,7 @@ export default class TodoApp extends Component {
           <TaskList
             todos={this.state.todoData}
             onScratched={this.changeStatus}
+            onDeleted={this.deleteTask}
           />
           <Footer />
         </section>
