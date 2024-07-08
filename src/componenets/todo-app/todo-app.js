@@ -1,39 +1,58 @@
-import React from "react";
+import React, { Component } from "react";
 import "./todo-app.css";
 import NewTaskForm from "../new-task-form";
 import TaskList from "../task-list";
 import Footer from "../footer";
 
-const TodoApp = () => {
-  const todoData = [
-    {
-      status: "completed",
-      description: "Completed task",
-      created: "created 17 seconds ago",
-      id: "task-1",
-    },
-    {
-      status: "editing",
-      description: "Editing task",
-      created: "created 5 minutes ago",
-      id: "task-2",
-    },
-    {
-      status: "",
-      description: "Active task",
-      created: "created 5 minutes ago",
-      id: "task-3",
-    },
-  ];
-  return (
-    <section className="todoapp">
-      <NewTaskForm />
-      <section className="main">
-        <TaskList todos={todoData} />
-        <Footer />
+export default class TodoApp extends Component {
+  state = {
+    todoData: [
+      {
+        num: "1k",
+        status: "",
+        description: "One task",
+        created: "created 17 seconds ago",
+      },
+      {
+        num: "2k",
+        status: "editing",
+        description: "Editing task",
+        created: "created 5 minutes ago",
+      },
+      {
+        num: "3k",
+        status: "",
+        description: "Another one task",
+        created: "created 5 minutes ago",
+      },
+    ],
+  };
+  changeStatus = (targetNum) => {
+    this.setState((prevState) => {
+      return {
+        todoData: prevState.todoData.map((todoItem) => {
+          const todoItemCopy = { ...todoItem };
+          const { num, status } = todoItemCopy;
+          if (num === targetNum) {
+            todoItemCopy.status = status ? "" : "completed";
+          }
+          return todoItemCopy;
+        }),
+      };
+    });
+  };
+  render() {
+    return (
+      <section className="todoapp">
+        <NewTaskForm />
+        <section className="main">
+          <TaskList
+            todos={this.state.todoData}
+            onScratched={this.changeStatus}
+          />
+          <Footer />
+        </section>
       </section>
-    </section>
-  );
-};
-
-export default TodoApp;
+    );
+  }
+}
