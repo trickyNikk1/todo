@@ -5,28 +5,27 @@ import TaskList from "../task-list";
 import Footer from "../footer";
 
 export default class TodoApp extends Component {
+  maxId = 100;
+
   state = {
-    todoData: [
-      {
-        num: "1k",
-        status: "",
-        description: "One task",
-        created: "created 17 seconds ago",
-      },
-      {
-        num: "2k",
-        status: "editing",
-        description: "Editing task",
-        created: "created 5 minutes ago",
-      },
-      {
-        num: "3k",
-        status: "",
-        description: "Another one task",
-        created: "created 5 minutes ago",
-      },
-    ],
+    todoData: [],
   };
+
+  addTask = (description, time = "less than 5 seconds") => {
+    this.setState((prevState) => {
+      return {
+        todoData: prevState.todoData.concat([
+          {
+            description,
+            num: this.maxId++,
+            created: "created " + time + " ago",
+            status: "",
+          },
+        ]),
+      };
+    });
+  };
+
   changeStatus = (targetNum) => {
     this.setState((prevState) => {
       return {
@@ -41,26 +40,34 @@ export default class TodoApp extends Component {
       };
     });
   };
+
   deleteTask = (targetNum) => {
     this.setState((prevState) => {
       return {
-        todoData: prevState.todoData.filter((todoItem) => {
-          return todoItem.num !== targetNum;
+        todoData: prevState.todoData.filter(({ num }) => {
+          return num !== targetNum;
         }),
       };
     });
   };
+
   render() {
+    const { todoData } = this.state;
+    const completedCount = todoData.filter(
+      (el) => el.status === "completed"
+    ).length;
+    const todoCount = todoData.length - completedCount;
+
     return (
       <section className="todoapp">
-        <NewTaskForm />
+        <NewTaskForm onSubmit={(description) => this.addTask(description)} />
         <section className="main">
           <TaskList
             todos={this.state.todoData}
             onScratched={this.changeStatus}
             onDeleted={this.deleteTask}
           />
-          <Footer />
+          <Footer todo={todoCount} />
         </section>
       </section>
     );
