@@ -4,18 +4,17 @@ import "./task-list.css";
 
 export default class TaskList extends Component {
   render() {
-    const { todos, onScratched, onDeleted } = this.props;
-    const elements = todos.map(({ status, num, ...itemProps }) => {
-      const props = {
-        ...itemProps,
-        num: num,
-      };
+    const { todos, onScratched, onDeleted, onEdit, onSubmit } = this.props;
+    const elements = todos.map((itemProps) => {
+      const { num, status } = itemProps;
       return (
         <li className={status} key={num}>
           <Task
             onDeleted={() => onDeleted(num)}
             onScratched={() => onScratched(num)}
-            {...props}
+            onEdit={() => onEdit(num, false)}
+            onSubmit={(description, num) => onSubmit(description, num)}
+            {...itemProps}
           />
         </li>
       );

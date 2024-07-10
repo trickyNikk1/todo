@@ -9,65 +9,137 @@ export default class TodoApp extends Component {
 
   state = {
     todoData: [],
+    filter: "all",
   };
 
-  addTask = (description, time = "less than 5 seconds") => {
-    this.setState((prevState) => {
+  addTask = (description) => {
+    const timeAdd = new Date();
+    this.setState(({ todoData, filter }) => {
+      const newTaskArr = [
+        {
+          description,
+          num: this.maxId++,
+          done: false,
+          status: "",
+          time: timeAdd,
+        },
+      ];
       return {
-        todoData: prevState.todoData.concat([
-          {
-            description,
-            num: this.maxId++,
-            created: "created " + time + " ago",
-            status: "",
-          },
-        ]),
+        todoData: newTaskArr.concat(todoData),
+        filter,
       };
     });
   };
 
-  changeStatus = (targetNum) => {
-    this.setState((prevState) => {
+  changeStatus = (targetNum, isEdited = true) => {
+    this.setState(({ todoData, filter }) => {
       return {
-        todoData: prevState.todoData.map((todoItem) => {
+        todoData: todoData.map((todoItem) => {
           const todoItemCopy = { ...todoItem };
-          const { num, status } = todoItemCopy;
-          if (num === targetNum) {
-            todoItemCopy.status = status ? "" : "completed";
+          const { num, done, status } = todoItemCopy;
+          if (num === targetNum && status !== "editing" && isEdited && done) {
+            todoItemCopy.status = "";
+            todoItemCopy.done = false;
+          }
+          if (num === targetNum && status !== "editing" && isEdited && !done) {
+            todoItemCopy.status = "completed";
+            todoItemCopy.done = true;
+          }
+          if (num === targetNum && status === "editing" && isEdited && !done) {
+            todoItemCopy.status = "";
+          }
+          if (num === targetNum && status === "editing" && isEdited && done) {
+            todoItemCopy.status = "completed";
+          }
+          if (num === targetNum && !isEdited) {
+            todoItemCopy.status = "editing";
           }
           return todoItemCopy;
         }),
+        filter,
       };
     });
   };
 
   deleteTask = (targetNum) => {
-    this.setState((prevState) => {
+    this.setState(({ todoData, filter }) => {
       return {
-        todoData: prevState.todoData.filter(({ num }) => {
-          return num !== targetNum;
-        }),
+        todoData: todoData.filter(({ num }) => num !== targetNum),
+        filter,
       };
     });
   };
 
+  clearCompleted = () => {
+    this.setState(({ todoData, filter }) => {
+      return {
+        todoData: todoData.filter(({ status }) => status !== "completed"),
+        filter,
+      };
+    });
+  };
+
+  changeFilter = (filter) => {
+    this.setState(({ todoData }) => {
+      return {
+        todoData,
+        filter,
+      };
+    });
+  };
+  filterTodoData = (data, filter) => {
+    if (filter === "all") {
+      return data;
+    }
+    if (filter === "completed") {
+      return data.filter(({ status }) => status === "completed");
+    }
+    if (filter === "active") {
+      return data.filter(({ status }) => status === "");
+    }
+  };
+  changeDescription = (targetNum, newDescription) => {
+    this.setState(({ todoData, filter }) => {
+      return {
+        todoData: todoData.map((item) => {
+          const { num } = item;
+          let newItem = { ...item };
+          if (num === targetNum) {
+            newItem.description = newDescription;
+          }
+          return newItem;
+        }),
+        filter,
+      };
+    });
+  };
+  onTaskSubmit = (description, num) => {
+    this.changeDescription(num, description);
+    this.changeStatus(num, true);
+  };
   render() {
-    const { todoData } = this.state;
+    const { todoData, filter } = this.state;
+    const filteredTodoData = this.filterTodoData(todoData, filter);
     const completedCount = todoData.filter(
       (el) => el.status === "completed"
     ).length;
     const todoCount = todoData.length - completedCount;
-
     return (
       <section className="todoapp">
         <NewTaskForm onSubmit={(description) => this.addTask(description)} />
         <section className="main">
           <TaskList
-            todos={this.state.todoData}
+            todos={filteredTodoData}
             onScratched={this.changeStatus}
             onDeleted={this.deleteTask}
+            onEdit={this.changeStatus}
+            onSubmit={(description, num) => this.onTaskSubmit(description, num)}
           />
-          <Footer todo={todoCount} />
+          <Footer
+            todo={todoCount}
+            onClear={this.clearCompleted}
+            onChangeFilter={this.changeFilter}
+          />
         </section>
       </section>
     );
