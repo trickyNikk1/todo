@@ -88,7 +88,7 @@ export default class Task extends Component {
     if (status === "editing") {
       return (
         <div>
-          <form onSubmit={this.handleSubmit}>
+          <form onSubmit={this.handleSubmit} onBlur={this.handleSubmit}>
             <input
               className="edit"
               onChange={this.handleChange}
