@@ -1,18 +1,26 @@
-import React, { Component } from "react";
-import "./new-task-form.css";
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+
+import './new-task-form.css'
 
 export default class NewTaskForm extends Component {
+  static defaultProps = {
+    onSubmit: () => {},
+  }
+  propTypes = {
+    onSubmit: PropTypes.func,
+  }
   state = {
-    value: "",
-  };
+    value: '',
+  }
   handleChange = (event) => {
-    this.setState({ value: event.target.value });
-  };
+    this.setState({ value: event.target.value })
+  }
   handleSubmit = (event) => {
-    event.preventDefault();
-    this.props.onSubmit(this.state.value);
-    this.setState({ value: "" });
-  };
+    event.preventDefault()
+    this.props.onSubmit(this.state.value)
+    this.setState({ value: '' })
+  }
   render() {
     return (
       <header className="header">
@@ -27,6 +35,6 @@ export default class NewTaskForm extends Component {
           />
         </form>
       </header>
-    );
+    )
   }
 }
