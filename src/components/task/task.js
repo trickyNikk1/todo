@@ -5,7 +5,7 @@ import './task.css'
 export default class Task extends Component {
   state = {
     timeAgo: formatDistanceToNow(this.props.time, { includeSeconds: true }),
-    description: this.props.description,
+    title: this.props.title,
   }
 
   componentDidMount() {
@@ -14,12 +14,12 @@ export default class Task extends Component {
 
   updateTimeAgo = () => {
     const intervalId = setInterval(() => {
-      this.setState(({ description }) => {
+      this.setState(({ title }) => {
         return {
           timeAgo: formatDistanceToNow(this.props.time, {
             includeSeconds: true,
           }),
-          description,
+          title,
         }
       })
     }, 5000)
@@ -34,17 +34,17 @@ export default class Task extends Component {
     this.setState(({ timeAgo }) => {
       return {
         timeAgo,
-        description: event.target.value,
+        title: event.target.value,
       }
     })
   }
   handleSubmit = (event) => {
     event.preventDefault()
-    this.props.onSubmit(this.state.description, this.props.num)
+    this.props.onSubmit(this.state.title, this.props.num)
   }
 
   render() {
-    const { description, status, num, onScratched, onDeleted, onEdit } = this.props
+    const { title, status, num, onScratched, onDeleted, onEdit } = this.props
     const timeAgoText = 'created ' + this.state.timeAgo + ' ago'
     const id = 'checkbox-' + num
     if (status === 'completed') {
@@ -52,8 +52,13 @@ export default class Task extends Component {
         <div className="view">
           <input className="toggle" type="checkbox" id={id} onClick={onScratched} defaultChecked />
           <label htmlFor={id}>
-            <span className="description">{description}</span>
-            <span className="created">{timeAgoText}</span>
+            <span className="title">{title}</span>
+            <span className="description">
+              <button className="icon icon-play"></button>
+              <button className="icon icon-pause"></button>
+              12:25
+            </span>
+            <span className="description">{timeAgoText}</span>
           </label>
           <button className="icon icon-edit" onClick={onEdit} />
           <button className="icon icon-destroy" onClick={onDeleted} />
@@ -65,8 +70,13 @@ export default class Task extends Component {
         <div className="view">
           <input className="toggle" type="checkbox" id={id} onClick={onScratched} />
           <label htmlFor={id}>
-            <span className="description">{description}</span>
-            <span className="created">{timeAgoText}</span>
+            <span className="title">{title}</span>
+            <span className="description">
+              <button className="icon icon-play"></button>
+              <button className="icon icon-pause"></button>
+              12:25
+            </span>
+            <span className="description">{timeAgoText}</span>
           </label>
           <button className="icon icon-edit" onClick={onEdit} />
           <button className="icon icon-destroy" onClick={onDeleted} />
@@ -77,7 +87,7 @@ export default class Task extends Component {
       return (
         <div>
           <form onSubmit={this.handleSubmit} onBlur={this.handleSubmit}>
-            <input className="edit" onChange={this.handleChange} value={this.state.description} autoFocus></input>
+            <input className="edit" onChange={this.handleChange} value={this.state.title} autoFocus></input>
           </form>
         </div>
       )

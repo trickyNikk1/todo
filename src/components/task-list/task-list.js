@@ -12,7 +12,7 @@ export default class TaskList extends Component {
     onScratched: () => {},
     todos: [],
   }
-  propTypes = {
+  static propTypes = {
     onDeleted: PropTypes.func,
     onEdit: PropTypes.func,
     onSubmit: PropTypes.func,

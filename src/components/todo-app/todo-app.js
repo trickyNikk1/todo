@@ -13,12 +13,13 @@ export default class TodoApp extends Component {
     filter: 'all',
   }
 
-  addTask = (description) => {
+  addTask = ({ todo: title, min, sec }) => {
+    console.log(min, sec)
     const timeAdd = new Date()
     this.setState(({ todoData, filter }) => {
       const newTaskArr = [
         {
-          description,
+          title,
           num: this.maxId++,
           done: false,
           status: '',
@@ -99,14 +100,14 @@ export default class TodoApp extends Component {
       return data.filter(({ status }) => status === '')
     }
   }
-  changeDescription = (targetNum, newDescription) => {
+  changeTitle = (targetNum, newTitle) => {
     this.setState(({ todoData, filter }) => {
       return {
         todoData: todoData.map((item) => {
           const { num } = item
           let newItem = { ...item }
           if (num === targetNum) {
-            newItem.description = newDescription
+            newItem.title = newTitle
           }
           return newItem
         }),
@@ -114,8 +115,8 @@ export default class TodoApp extends Component {
       }
     })
   }
-  onTaskSubmit = (description, num) => {
-    this.changeDescription(num, description)
+  onTaskSubmit = (title, num) => {
+    this.changeTitle(num, title)
     this.changeStatus(num, true)
   }
   render() {
@@ -125,14 +126,14 @@ export default class TodoApp extends Component {
     const todoCount = todoData.length - completedCount
     return (
       <section className="todoapp">
-        <NewTaskForm onSubmit={(description) => this.addTask(description)} />
+        <NewTaskForm onSubmit={(newTodo) => this.addTask(newTodo)} />
         <section className="main">
           <TaskList
             todos={filteredTodoData}
             onScratched={this.changeStatus}
             onDeleted={this.deleteTask}
             onEdit={this.changeStatus}
-            onSubmit={(description, num) => this.onTaskSubmit(description, num)}
+            onSubmit={(title, num) => this.onTaskSubmit(title, num)}
           />
           <Footer todoCount={todoCount} onClear={this.clearCompleted} onChangeFilter={this.changeFilter} />
         </section>
