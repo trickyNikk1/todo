@@ -17,22 +17,44 @@ export default class NewTaskForm extends Component {
   }
   handleSubmit = (event) => {
     event.preventDefault()
-    const { todo, min, sec } = this.state
-    if (!todo && !min && !sec) {
-      return
-    }
-    if (todo && min && sec) {
-      this.props.onSubmit(this.state)
-      this.setState({ todo: '', min: '', sec: '' })
-      document.querySelector('#todo').focus()
-    }
-    if (todo && !min && !sec) {
-      document.querySelector('#min').focus()
-    }
-    if (todo && min && !sec) {
-      document.querySelector('#sec').focus()
+    let counter = Object.keys(this.state).length
+    for (let key in this.state) {
+      if (this.state[key] === '') {
+        document.querySelector(`#${key}`).focus()
+        return
+      }
+      counter -= 1
+      if (counter === 0) {
+        this.props.onSubmit(this.state)
+        this.setState({ todo: '', min: '', sec: '' })
+        document.querySelector('#todo').focus()
+      }
     }
   }
+  // handleSubmit = (event) => {
+  //   event.preventDefault()
+  //   const { todo, min, sec } = this.state
+  //   if (!todo && !min && !sec) {
+  //     return
+  //   }
+  //   if (todo && min && sec) {
+  //     this.props.onSubmit(this.state)
+  //     this.setState({ todo: '', min: '', sec: '' })
+  //     document.querySelector('#todo').focus()
+  //   }
+  //   if (todo && !min && !sec) {
+  //     document.querySelector('#min').focus()
+  //   }
+  //   if (todo && min && !sec) {
+  //     document.querySelector('#sec').focus()
+  //   }
+  //   if (!todo && min && !sec) {
+  //     document.querySelector('#sec').focus()
+  //   }
+  //   if (!todo && min && sec) {
+  //     document.querySelector('#todo').focus()
+  //   }
+  // }
   handleChange = (event) => {
     const { value, name } = event.target
     if (this.validateTime(value) || name === 'todo') {

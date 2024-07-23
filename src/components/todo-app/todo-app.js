@@ -14,7 +14,6 @@ export default class TodoApp extends Component {
   }
 
   addTask = ({ todo: title, min, sec }) => {
-    console.log(min, sec)
     const timeAdd = new Date()
     this.setState(({ todoData, filter }) => {
       const newTaskArr = [
@@ -24,6 +23,9 @@ export default class TodoApp extends Component {
           done: false,
           status: '',
           time: timeAdd,
+          timer: +min * 60 + +sec,
+          isActive: false,
+          timerId: null,
         },
       ]
       return {
@@ -89,6 +91,7 @@ export default class TodoApp extends Component {
       }
     })
   }
+
   filterTodoData = (data, filter) => {
     if (filter === 'all') {
       return data
@@ -100,6 +103,7 @@ export default class TodoApp extends Component {
       return data.filter(({ status }) => status === '')
     }
   }
+
   changeTitle = (targetNum, newTitle) => {
     this.setState(({ todoData, filter }) => {
       return {
@@ -115,9 +119,66 @@ export default class TodoApp extends Component {
       }
     })
   }
+
   onTaskSubmit = (title, num) => {
     this.changeTitle(num, title)
     this.changeStatus(num, true)
+  }
+  startTimer = (targetNum) => {
+    const currentItem = this.state.todoData.find((item) => item.num === targetNum)
+    if (currentItem.isActive) {
+      return
+    }
+    this.setState((prevState) => {
+      const newTodoData = [...prevState.todoData]
+      newTodoData[index].isActive = true
+      return {
+        todoData: newTodoData,
+      }
+    })
+    const index = this.state.todoData.findIndex((item) => item.num === targetNum)
+    const timerId = setInterval(() => {
+      this.setState((prevState) => {
+        const newTodoData = [...prevState.todoData]
+        if (newTodoData[index] === undefined) {
+          clearInterval(timerId)
+          return
+        }
+        newTodoData[index].timer -= 1
+        if (newTodoData[index].timer <= 0) {
+          clearInterval(timerId)
+        }
+        return {
+          todoData: newTodoData,
+        }
+      })
+    }, 1000)
+    this.setState((prevState) => ({
+      todoData: prevState.todoData.map((item) => {
+        if (item.num === targetNum) {
+          return { ...item, timerId }
+        }
+        return item
+      }),
+    }))
+  }
+  stopTimer = (targetNum) => {
+    const index = this.state.todoData.findIndex((item) => item.num === targetNum)
+    const currentItem = this.state.todoData.find((item) => item.num === targetNum && item.timerId)
+    if (!currentItem) {
+      return
+    }
+
+    clearInterval(currentItem.timerId)
+
+    this.setState((prevState) => {
+      const newTodoData = [...prevState.todoData]
+      newTodoData[index].timerId = null
+      newTodoData[index].isActive = false
+      return {
+        todoData: newTodoData,
+      }
+    })
   }
   render() {
     const { todoData, filter } = this.state
@@ -129,6 +190,8 @@ export default class TodoApp extends Component {
         <NewTaskForm onSubmit={(newTodo) => this.addTask(newTodo)} />
         <section className="main">
           <TaskList
+            onPlay={this.startTimer}
+            onStop={this.stopTimer}
             todos={filteredTodoData}
             onScratched={this.changeStatus}
             onDeleted={this.deleteTask}
