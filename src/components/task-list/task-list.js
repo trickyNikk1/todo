@@ -6,13 +6,17 @@ import './task-list.css'
 
 export default class TaskList extends Component {
   static defaultProps = {
+    onPlay: () => {},
+    onStop: () => {},
     onDeleted: () => {},
     onEdit: () => {},
     onSubmit: () => {},
     onScratched: () => {},
     todos: [],
   }
-  propTypes = {
+  static propTypes = {
+    onPlay: PropTypes.func,
+    onStop: PropTypes.func,
     onDeleted: PropTypes.func,
     onEdit: PropTypes.func,
     onSubmit: PropTypes.func,
@@ -20,12 +24,14 @@ export default class TaskList extends Component {
     todos: PropTypes.arrayOf(PropTypes.object),
   }
   render() {
-    const { todos, onScratched, onDeleted, onEdit, onSubmit } = this.props
+    const { todos, onScratched, onDeleted, onEdit, onSubmit, onPlay, onStop } = this.props
     const elements = todos.map((itemProps) => {
       const { num, status } = itemProps
       return (
         <li className={status} key={num}>
           <Task
+            onPlay={() => onPlay(num)}
+            onStop={() => onStop(num)}
             onDeleted={() => onDeleted(num)}
             onScratched={() => onScratched(num)}
             onEdit={() => onEdit(num, false)}

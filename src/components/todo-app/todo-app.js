@@ -13,16 +13,19 @@ export default class TodoApp extends Component {
     filter: 'all',
   }
 
-  addTask = (description) => {
+  addTask = ({ todo: title, min, sec }) => {
     const timeAdd = new Date()
     this.setState(({ todoData, filter }) => {
       const newTaskArr = [
         {
-          description,
+          title,
           num: this.maxId++,
           done: false,
           status: '',
           time: timeAdd,
+          timer: +min * 60 + +sec,
+          isActive: false,
+          timerId: null,
         },
       ]
       return {
@@ -88,6 +91,7 @@ export default class TodoApp extends Component {
       }
     })
   }
+
   filterTodoData = (data, filter) => {
     if (filter === 'all') {
       return data
@@ -99,14 +103,15 @@ export default class TodoApp extends Component {
       return data.filter(({ status }) => status === '')
     }
   }
-  changeDescription = (targetNum, newDescription) => {
+
+  changeTitle = (targetNum, newTitle) => {
     this.setState(({ todoData, filter }) => {
       return {
         todoData: todoData.map((item) => {
           const { num } = item
           let newItem = { ...item }
           if (num === targetNum) {
-            newItem.description = newDescription
+            newItem.title = newTitle
           }
           return newItem
         }),
@@ -114,9 +119,66 @@ export default class TodoApp extends Component {
       }
     })
   }
-  onTaskSubmit = (description, num) => {
-    this.changeDescription(num, description)
+
+  onTaskSubmit = (title, num) => {
+    this.changeTitle(num, title)
     this.changeStatus(num, true)
+  }
+  startTimer = (targetNum) => {
+    const currentItem = this.state.todoData.find((item) => item.num === targetNum)
+    if (currentItem.isActive) {
+      return
+    }
+    this.setState((prevState) => {
+      const newTodoData = [...prevState.todoData]
+      newTodoData[index].isActive = true
+      return {
+        todoData: newTodoData,
+      }
+    })
+    const index = this.state.todoData.findIndex((item) => item.num === targetNum)
+    const timerId = setInterval(() => {
+      this.setState((prevState) => {
+        const newTodoData = [...prevState.todoData]
+        if (newTodoData[index] === undefined) {
+          clearInterval(timerId)
+          return
+        }
+        newTodoData[index].timer -= 1
+        if (newTodoData[index].timer <= 0) {
+          clearInterval(timerId)
+        }
+        return {
+          todoData: newTodoData,
+        }
+      })
+    }, 1000)
+    this.setState((prevState) => ({
+      todoData: prevState.todoData.map((item) => {
+        if (item.num === targetNum) {
+          return { ...item, timerId }
+        }
+        return item
+      }),
+    }))
+  }
+  stopTimer = (targetNum) => {
+    const index = this.state.todoData.findIndex((item) => item.num === targetNum)
+    const currentItem = this.state.todoData.find((item) => item.num === targetNum && item.timerId)
+    if (!currentItem) {
+      return
+    }
+
+    clearInterval(currentItem.timerId)
+
+    this.setState((prevState) => {
+      const newTodoData = [...prevState.todoData]
+      newTodoData[index].timerId = null
+      newTodoData[index].isActive = false
+      return {
+        todoData: newTodoData,
+      }
+    })
   }
   render() {
     const { todoData, filter } = this.state
@@ -125,14 +187,16 @@ export default class TodoApp extends Component {
     const todoCount = todoData.length - completedCount
     return (
       <section className="todoapp">
-        <NewTaskForm onSubmit={(description) => this.addTask(description)} />
+        <NewTaskForm onSubmit={(newTodo) => this.addTask(newTodo)} />
         <section className="main">
           <TaskList
+            onPlay={this.startTimer}
+            onStop={this.stopTimer}
             todos={filteredTodoData}
             onScratched={this.changeStatus}
             onDeleted={this.deleteTask}
             onEdit={this.changeStatus}
-            onSubmit={(description, num) => this.onTaskSubmit(description, num)}
+            onSubmit={(title, num) => this.onTaskSubmit(title, num)}
           />
           <Footer todoCount={todoCount} onClear={this.clearCompleted} onChangeFilter={this.changeFilter} />
         </section>
