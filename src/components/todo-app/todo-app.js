@@ -1,25 +1,22 @@
-import React, { Component } from 'react'
+import React, { useState } from 'react'
+import { nanoid } from 'nanoid'
 
 import './todo-app.css'
 import NewTaskForm from '../new-task-form'
 import TaskList from '../task-list'
 import Footer from '../footer'
 
-export default class TodoApp extends Component {
-  maxId = 100
+export default function TodoApp() {
+  const [todoData, setTodoData] = useState([])
+  const [filter, setFilter] = useState('all')
 
-  state = {
-    todoData: [],
-    filter: 'all',
-  }
-
-  addTask = ({ todo: title, min, sec }) => {
+  const addTask = ({ todo: title, min, sec }) => {
     const timeAdd = new Date()
-    this.setState(({ todoData, filter }) => {
+    setTodoData((todoData) => {
       const newTaskArr = [
         {
           title,
-          num: this.maxId++,
+          num: nanoid(10),
           done: false,
           status: '',
           time: timeAdd,
@@ -28,71 +25,63 @@ export default class TodoApp extends Component {
           timerId: null,
         },
       ]
-      return {
-        todoData: newTaskArr.concat(todoData),
-        filter,
-      }
+      return newTaskArr.concat(todoData)
     })
   }
 
-  changeStatus = (targetNum, isEdited = true) => {
-    this.setState(({ todoData, filter }) => {
-      return {
-        todoData: todoData.map((todoItem) => {
-          const todoItemCopy = { ...todoItem }
-          const { num, done, status } = todoItemCopy
-          if (num === targetNum && status !== 'editing' && isEdited && done) {
-            todoItemCopy.status = ''
-            todoItemCopy.done = false
-          }
-          if (num === targetNum && status !== 'editing' && isEdited && !done) {
-            todoItemCopy.status = 'completed'
-            todoItemCopy.done = true
-          }
-          if (num === targetNum && status === 'editing' && isEdited && !done) {
-            todoItemCopy.status = ''
-          }
-          if (num === targetNum && status === 'editing' && isEdited && done) {
-            todoItemCopy.status = 'completed'
-          }
-          if (num === targetNum && !isEdited) {
-            todoItemCopy.status = 'editing'
-          }
-          return todoItemCopy
-        }),
-        filter,
-      }
+  const toggleTaskStatus = (taskNum, isEditing = true) => {
+    setTodoData((todoData) => {
+      return todoData.map((task) => {
+        const updatedTask = { ...task }
+        const { num, done, status } = updatedTask
+
+        if (num === taskNum && status !== 'editing' && isEditing && done) {
+          updatedTask.done = false
+          updatedTask.status = ''
+        }
+
+        if (num === taskNum && status !== 'editing' && isEditing && !done) {
+          updatedTask.done = true
+          updatedTask.status = 'completed'
+          stopTimer(taskNum)
+        }
+
+        if (num === taskNum && status === 'editing' && isEditing && !done) {
+          updatedTask.status = ''
+        }
+
+        if (num === taskNum && status === 'editing' && isEditing && done) {
+          updatedTask.status = 'completed'
+          stopTimer(taskNum)
+        }
+
+        if (num === taskNum && !isEditing) {
+          updatedTask.status = 'editing'
+        }
+
+        return updatedTask
+      })
     })
   }
 
-  deleteTask = (targetNum) => {
-    this.setState(({ todoData, filter }) => {
-      return {
-        todoData: todoData.filter(({ num }) => num !== targetNum),
-        filter,
-      }
+  const deleteTask = (targetNum) => {
+    stopTimer(targetNum)
+    setTodoData((todoData) => {
+      return todoData.filter(({ num }) => num !== targetNum)
     })
   }
 
-  clearCompleted = () => {
-    this.setState(({ todoData, filter }) => {
-      return {
-        todoData: todoData.filter(({ status }) => status !== 'completed'),
-        filter,
-      }
+  const clearCompleted = () => {
+    setTodoData((todoData) => {
+      return todoData.filter(({ status }) => status !== 'completed')
     })
   }
 
-  changeFilter = (filter) => {
-    this.setState(({ todoData }) => {
-      return {
-        todoData,
-        filter,
-      }
-    })
+  const changeFilter = (filter) => {
+    setFilter(filter)
   }
 
-  filterTodoData = (data, filter) => {
+  const filterTodoData = (data, filter) => {
     if (filter === 'all') {
       return data
     }
@@ -104,103 +93,70 @@ export default class TodoApp extends Component {
     }
   }
 
-  changeTitle = (targetNum, newTitle) => {
-    this.setState(({ todoData, filter }) => {
-      return {
-        todoData: todoData.map((item) => {
-          const { num } = item
-          let newItem = { ...item }
-          if (num === targetNum) {
-            newItem.title = newTitle
-          }
-          return newItem
-        }),
-        filter,
-      }
+  const changeTitle = (targetNum, newTitle) => {
+    setTodoData((todoData) => {
+      return todoData.map((item) => {
+        const { num } = item
+        let newItem = { ...item }
+        if (num === targetNum) {
+          newItem.title = newTitle
+        }
+        return newItem
+      })
     })
   }
 
-  onTaskSubmit = (title, num) => {
-    this.changeTitle(num, title)
-    this.changeStatus(num, true)
+  const onTaskSubmit = (title, num) => {
+    changeTitle(num, title)
+    toggleTaskStatus(num, true)
   }
-  startTimer = (targetNum) => {
-    const currentItem = this.state.todoData.find((item) => item.num === targetNum)
-    if (currentItem.isActive) {
-      return
-    }
-    this.setState((prevState) => {
-      const newTodoData = [...prevState.todoData]
-      newTodoData[index].isActive = true
-      return {
-        todoData: newTodoData,
+  const startTimer = (targetNum) => {
+    const currentItem = todoData.find(({ num }) => num === targetNum)
+    if (currentItem.status === 'completed') return
+    if (currentItem.isActive) return
+    if (currentItem.timer <= 0) return
+    currentItem.isActive = true
+    currentItem.timerId = setInterval(() => {
+      if (currentItem.timer <= 0) {
+        stopTimer(targetNum)
       }
-    })
-    const index = this.state.todoData.findIndex((item) => item.num === targetNum)
-    const timerId = setInterval(() => {
-      this.setState((prevState) => {
-        const newTodoData = [...prevState.todoData]
-        if (newTodoData[index] === undefined) {
-          clearInterval(timerId)
-          return
-        }
-        newTodoData[index].timer -= 1
-        if (newTodoData[index].timer <= 0) {
-          clearInterval(timerId)
-        }
-        return {
-          todoData: newTodoData,
-        }
+      setTodoData((todoData) => {
+        return todoData.map((item) => {
+          const { num, timer, isActive } = item
+          if (num === targetNum && isActive) {
+            item.timer = timer - 1
+          }
+          return item
+        })
       })
     }, 1000)
-    this.setState((prevState) => ({
-      todoData: prevState.todoData.map((item) => {
-        if (item.num === targetNum) {
-          return { ...item, timerId }
-        }
-        return item
-      }),
-    }))
   }
-  stopTimer = (targetNum) => {
-    const index = this.state.todoData.findIndex((item) => item.num === targetNum)
-    const currentItem = this.state.todoData.find((item) => item.num === targetNum && item.timerId)
-    if (!currentItem) {
-      return
-    }
 
+  const stopTimer = (targetNum) => {
+    const currentItem = todoData.find(({ num }) => num === targetNum)
+    if (!currentItem.isActive) return
+    currentItem.isActive = false
     clearInterval(currentItem.timerId)
+  }
 
-    this.setState((prevState) => {
-      const newTodoData = [...prevState.todoData]
-      newTodoData[index].timerId = null
-      newTodoData[index].isActive = false
-      return {
-        todoData: newTodoData,
-      }
-    })
-  }
-  render() {
-    const { todoData, filter } = this.state
-    const filteredTodoData = this.filterTodoData(todoData, filter)
-    const completedCount = todoData.filter((el) => el.status === 'completed').length
-    const todoCount = todoData.length - completedCount
-    return (
-      <section className="todoapp">
-        <NewTaskForm onSubmit={(newTodo) => this.addTask(newTodo)} />
-        <section className="main">
-          <TaskList
-            onPlay={this.startTimer}
-            onStop={this.stopTimer}
-            todos={filteredTodoData}
-            onScratched={this.changeStatus}
-            onDeleted={this.deleteTask}
-            onEdit={this.changeStatus}
-            onSubmit={(title, num) => this.onTaskSubmit(title, num)}
-          />
-          <Footer todoCount={todoCount} onClear={this.clearCompleted} onChangeFilter={this.changeFilter} />
-        </section>
+  const filteredTodoData = filterTodoData(todoData, filter)
+  const completedCount = todoData.filter((el) => el.status === 'completed').length
+  const todoCount = todoData.length - completedCount
+  return (
+    <section className="todoapp">
+      <NewTaskForm onSubmit={(newTodo) => addTask(newTodo)} />
+      <section className="main">
+        <TaskList
+          onPlay={startTimer}
+          onStop={stopTimer}
+          todos={filteredTodoData}
+          onScratched={toggleTaskStatus}
+          onDeleted={deleteTask}
+          onEdit={toggleTaskStatus}
+          onSubmit={(title, num) => onTaskSubmit(title, num)}
+        />
+        <Footer todoCount={todoCount} onClear={clearCompleted} onChangeFilter={changeFilter} />
       </section>
-    )
-  }
+    </section>
+  )
 }
